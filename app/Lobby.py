@@ -15,13 +15,14 @@ def home():
     #return "Ahoy there!"
     return render_template('home.html')
 
-@app.route('/creategameroom', methods=['GET', 'POST'])
+@app.route('/creategameroom/<string:data>', methods=['POST'])
 def createroom(data):
-    if request.method == 'GET':
-        return render_template('create-gameroom.html')
-    elif request.method == 'POST':
-        gameRoom = GameRoom(data)
-        return redirect(url_for('play1'))
+    gameRoom = GameRoom(data)
+    return redirect(url_for('play1'))
+
+@app.route('/creategameroom/')
+def startCreateRoom():
+    return render_template('create-gameroom.html')
 
 @app.route('/joingameroom')
 def joinroom():
@@ -103,15 +104,15 @@ class Lobby(object):
         if (gameroomName in self.gameroomNames):
             print("Cannot create. Room with that name already exists")
         else:
-            newGameroom = GameRoom(playerIP, gameroomName)
+            roomData = {
+                gameroomName: gameroomName,
+                # broker: playerIP,
+                #startingCash: startingCash,
+                # startingStockHoldings: startingStockHoldings
+            }
+            newGameroom = GameRoom(roomData)
             self.gameroomNames.append(gameroomName)
             self.gameRooms[gameroomName] = newGameroom
-            self.gameRooms[gameroomName]['grain'] = 100
-            self.gameRooms[gameroomName]['bonds'] = 100
-            self.gameRooms[gameroomName]['industrial'] = 100
-            self.gameRooms[gameroomName]['gold'] = 100
-            self.gameRooms[gameroomName]['silver'] = 100
-            self.gameRooms[gameroomName]['oil'] = 100
             self.gameRooms[gameroomName]['broker'] = playerIP
             playerIP.sendall('Confirm created room %s' % (gameroomName))
         return

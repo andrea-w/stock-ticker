@@ -5,13 +5,6 @@
 
 function $onInit() {
     var ctrl = this;
-
-    if (window.jQuery) {
-        // jQuery is available.
-    
-        // Print the jQuery version, e.g. "1.0.0":
-        console.log(window.jQuery.fn.jquery);
-    }
         
     var options = { 
         now: "12:35", //hh:mm 24 hour format only, defaults to current time 
