@@ -6,20 +6,15 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="static/wickedpicker.css">
-    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script type="text/javascript" src="../static/wickedpicker.js"></script>
     <script type="text/javascript" src="../static/create-gameroom.js"></script>
-    <link rel="stylesheet" type="text/css" href="styles.css">
-    
-
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
     <title>Create Game Room - Stock Ticker</title> 
 </head>
 <body>
 <div class="container">
 <h1>Stock Ticker</h1>
 <h2>Create New Game Room</h2>
-<form id="form" class="form-inline" on-submit="$onSubmit()" method="post">
+<form id="form" class="form-inline" method="post">
     <div class="row">
         <div class="col-md-6">
             <label for="playerName">Your name:</label>
@@ -43,7 +38,9 @@
     <div class="row">
         <div class="col-md-6">
             <label for="myPicker">Game duration:</label>
-            <input class="form-control" type="text" name="myPicker" id="myPicker" class="timepicker" id="myPicker" value="1:00" required/>
+            <!-- <input class="form-control" type="text" name="myPicker" id="myPicker" class="timepicker" id="myPicker" value="1:00" required/> -->
+            <!-- <input type="text" name="timepicker" class="timepicker"/> -->
+            <input type="text" id="timepicker" name="timepicker" class="timepicker" tabindex="-1">
         </div>
     </div>
     <div class="row text-center">
@@ -53,5 +50,9 @@
 <br>
 <br>
 </div>
+<script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script type="text/javascript" src="../static/wickedpicker.js"></script>
+<script type="text/javascript" src="{{ url_for('static', filename='wickedpicker.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='wickedpicker.css') }}">
 </body>
 </html>

@@ -42,11 +42,15 @@
             hoverState: 'hover-state',
             title: 'Timepicker',
             showSeconds: false,
+            timeSeparator: ' : ',
             secondsInterval: 1,
             minutesInterval: 1,
             beforeShow: null,
+            afterShow: null,
             show: null,
-            clearable: false
+            clearable: false,
+            closeOnClickOutside: true,
+            onClickOutside: function() {},
         };
 
     /*
@@ -62,14 +66,14 @@
         this.element.attr('aria-showingpicker', 'false');
         this.createPicker();
         this.timepicker = $('.wickedpicker');
-        this.up = $('.' + this.options.upArrow);
-        this.down = $('.' + this.options.downArrow);
+        this.up = $('.' + this.options.upArrow.split(/\s+/).join('.'));
+        this.down = $('.' + this.options.downArrow.split(/\s+/).join('.'));
         this.separator = $('.wickedpicker__controls__control--separator');
         this.hoursElem = $('.wickedpicker__controls__control--hours');
         this.minutesElem = $('.wickedpicker__controls__control--minutes');
         this.secondsElem = $('.wickedpicker__controls__control--seconds');
         this.meridiemElem = $('.wickedpicker__controls__control--meridiem');
-        this.close = $('.' + this.options.close);
+        this.close = $('.' + this.options.close.split(/\s+/).join('.'));
 
         //Create a new Date object based on the default or passing in now value
         var time = this.timeArrayFromString(this.options.now);
@@ -102,15 +106,18 @@
             this.setText(element);
             this.showHideMeridiemControl();
             if (this.getText(element) !== this.getTime()) {
-                var inputTime = this.getText(element).replace(/:/g, '').split(' ');
+
+                // Check meridiem 
+                var text = this.getText(element);
+                var re = /\s[ap]m$/i;
+                var meridiem = re.test(text) ? text.substr(-2, 2) : null;
+                var inputTime = text.replace(re, '').split(this.options.timeSeparator);
                 var newTime = {};
                 newTime.hours = inputTime[0];
-                newTime.minutes = inputTime[2];
+                newTime.minutes = inputTime[1];
+                newTime.meridiem = meridiem;
                 if (this.options.showSeconds) {
-                    newTime.seconds = inputTime[4];
-                    newTime.meridiem = inputTime[5];
-                } else {
-                    newTime.meridiem = inputTime[3];
+                    newTime.seconds = inputTime[2];
                 }
                 this.setTime(newTime);
             }
@@ -133,9 +140,14 @@
          * Hides the timepicker that is currently shown if it is not part of the timepicker
          *
          * @param {Object} The DOM object being clicked on the page
+         * 
+         * BeinnLora: added trigger function to call on closing/hiding timepicker. 
          */
         hideTimepicker: function (element) {
             this.timepicker.hide();
+            if (typeof this.options.afterShow === 'function') {
+                this.options.afterShow(element, this.timepicker);
+            }
             var pickerHidden = {
                 start: function () {
                     var setShowPickerFalse = $.Deferred();
@@ -208,23 +220,36 @@
             $(element).on('click focus', function (event) {
                 //Prevent multiple firings
                 if ($(self.timepicker).is(':hidden')) {
-                    self.showPicker($(this));
-                    $(self.hoursElem).focus();
+                  self.showPicker($(this));
+                  window.lastTimePickerControl = $(this); //Put the reference on this timepicker into global scope for unsing that in afterShow function
+                  $(self.hoursElem).focus();
                 }
             });
-            
+
+
             //Handle click events for closing Wickedpicker
-            var clickHandler = function (event) {
+            var clickHandler = function (event) { //TODO: Fix double firing
                 //Only fire the hide event when you have to
                 if ($(self.timepicker).is(':visible')) {
                     //Clicking the X
                     if ($(event.target).is(self.close)) {
-                        self.hideTimepicker(element);
+                      self.hideTimepicker(window.lastTimePickerControl);
                     } else if ($(event.target).closest(self.timepicker).length || $(event.target).closest($('.hasWickedpicker')).length) { //Clicking the Wickedpicker or one of it's inputs
-                        event.stopPropagation();
+                      event.stopPropagation();
                     } else {   //Everything else
-                        self.hideTimepicker(element);
+                      if (typeof self.options.onClickOutside === 'function') {
+                        self.options.onClickOutside();
+                      }
+                      else {
+                        console.warn("Type of onClickOutside must be a function");
+                      }
+
+                      if (!self.options.closeOnClickOutside) {
+                        return;
+                      }
+                      self.hideTimepicker(window.lastTimePickerControl);
                     }
+                    window.lastTimePickerControl = null;
                 }
             };
             $(document).off('click', clickHandler).on('click', clickHandler);
@@ -439,6 +464,7 @@
                 'Wickedpicker': this,
                 'input': element
             }, function (event) {
+                if(event.which!=1) return false;
                 var operator = (this.className.indexOf('up') > -1) ? '+' : '-';
                 var passedData = event.data;
                 if (event.type == 'mousedown') {
@@ -507,12 +533,9 @@
          * @return {string}
          */
         formatTime: function (hour, min, meridiem, seconds) {
-            var formattedTime = hour + ' : ' + min;
-            if (this.options.twentyFour) {
-                formattedTime = hour + ' : ' + min;
-            }
+            var formattedTime = hour + this.options.timeSeparator + min;
             if (this.options.showSeconds) {
-                formattedTime += ' : ' + seconds;
+                formattedTime += this.options.timeSeparator  + seconds;
             }
             if (this.options.twentyFour === false) {
                 formattedTime += ' ' + meridiem;
@@ -573,6 +596,9 @@
         _time: function () {
             var inputValue = $(this.element).val();
             return (inputValue === '') ? this.formatTime(this.selectedHour, this.selectedMin, this.selectedMeridiem, this.selectedSec) : inputValue;
+        },
+        _hide: function() {
+            this.hideTimepicker(this.element);
         }
     });
 

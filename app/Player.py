@@ -29,7 +29,7 @@ class Player():
             for sock in self.read_sockets:
                 if sock is self.server_conn:
                    msg = sock.recv()
-                   print msg
+                   print(msg)
                    self.parseFromServer(msg)
             for wr in self.write_sockets:
                 self.server_conn.sendall(sys.stdin.readline())
@@ -84,16 +84,16 @@ class Player():
         if msg.startswith('div'):
             self.receiveDividend(msg)
         elif msg.startswith('Confirm'):
-            print msg
+            print(msg)
         elif msg.startswith('Join'):
-            print msg
+            print(msg)
             a, b = msg.split(" ")
             self.gameroomName = b
         return
 
     def receiveDividend(self, msg):
         a, b, c, d, e = msg.split(',')
-        print 'Received payment of %s for %s shares of %s at %s each' % (b, c, d, e)
+        print('Received payment of %s for %s shares of %s at %s each' % (b, c, d, e))
         return
 
 def main():

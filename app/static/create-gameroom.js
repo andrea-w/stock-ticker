@@ -21,22 +21,24 @@ function $onInit() {
         show: null, //A function to be called when the Wickedpicker is shown 
         clearable: false, //Make the picker's input clearable (has clickable "x") 
     }; 
-    var myPicker = $('.timepicker').wickedpicker(); 
-    myPicker.wickedpicker('setTime', 0, "5:00");
-    //console.log(myPicker.wickedpicker('time'));
+    // var myPicker = $('.timepicker').wickedpicker(); 
+    $('.timepicker').wickedpicker(options);
+    //myPicker.wickedpicker('setTime', 0, "5:00");
+    console.log(timepickers.wickedpicker('time'));
 }
 
 function $onSubmit() {
-    let data = {    
-        brokerName: document.getElementById('playerName').value,
-        gameRoomName: document.getElementById('gameRoomName').value,
-        startingStockHoldings: document.getElementById('startingStockHoldings').value,
-        startingCash: document.getElementById('startingCash').value,
-        //ctrl.gameDuration = myPicker.get();
-        gameDuration: document.getElementById('myPicker').value,
-        playerIP: 'Andrea'
+    var data = {    
+        "brokerName": document.getElementById('playerName').value,
+        "gameRoomName": document.getElementById('gameRoomName').value,
+        "startingStockHoldings": document.getElementById('startingStockHoldings').value,
+        "startingCash": document.getElementById('startingCash').value,
+        "gameDuration": document.getElementById('myPicker').value,
+        "playerIP": '127.0.0.1'
     };
-    $.post('/creategameroom', {data: data});
+    var input_json = JSON.stringify(data);
+    console.log('input_json: ', input_json);
+    $.post('/gameroom/', {data: input_json});
 
     //window.location.href = '../play/' + ctrl.gameRoomName;
 }

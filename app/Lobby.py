@@ -1,7 +1,7 @@
 # Lobby.py
 # The Lobby (only 1 exists) acts as server/controller for game
 
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, jsonify, json
 import socket
 from GameRoom import GameRoom
 from Player import Player
@@ -12,30 +12,48 @@ app = Flask(__name__, static_url_path='/static')
 
 @app.route('/')
 def home():
-    #return "Ahoy there!"
     return render_template('home.html')
 
-@app.route('/creategameroom/<string:data>', methods=['POST'])
-def createroom(data):
-    gameRoom = GameRoom(data)
-    return redirect(url_for('play1'))
+@app.route('/gameroom', methods=['POST'])
+def createroom():
+    if request.method=='POST':
+        req_data = request.get_json()
+        playerName = req_data['playerName']
+        gameRoomName = req_data['gameRoomName']
+        startingCash = req_data['startingCash']
+        startingStockHoldings = req_data['startingStockHoldings']
+        return '''
+           The player's name is: {}
+           The game room's name is: {}
+           The starting cash value is: {}
+           The starting stock holdings value is: {}'''.format(playerName, gameRoomName, startingCash, startingStockHoldings)
 
-@app.route('/creategameroom/')
+@app.route('/creategameroom', methods=['GET', 'POST'])
 def startCreateRoom():
-    return render_template('create-gameroom.html')
+    if request.method=='GET':
+        return render_template('create-gameroom.html')
+    elif request.method=='POST':
+        jsonObj = {"playerName" : request.form['playerName'], 
+                "gameRoomName" : request.form['gameRoomName'],
+                "startingStockHoldings" : request.form['startingStockHoldings'],
+                "startingCash" : request.form['startingCash']}
+        return jsonify(jsonObj)
 
-@app.route('/joingameroom')
+
+@app.route('/joingameroom/')
 def joinroom():
     return render_template('join-gameroom.html')
 
-@app.route('/play/<string:gameRoomName>/')
-def play1(gameRoomName):
-      return render_template('play.html', gameRoomName=gameRoomName)
+@app.route('/play/')
+def play1(jsonObj):
+    return 'Welcome to %s' % jsonObj.get('gameRoomName')
+      #return render_template('play.html', gameRoomName=gameRoomName)
 
 @app.route('/play/<string:gameRoomName>/', methods=['GET', 'POST'])
 def play(gameRoomName):
     if request.method=='GET':
-        return render_template('play.html', gameRoomName=gameRoomName)
+        #return render_template('play.html', gameRoomName=gameRoomName)
+        return redirect(url_for('play1', gameRoomName=gameRoomName))
     elif request.method=='POST':
         GameRoom.setGameRoomName = gameRoomName
         return redirect(url_for('play1', gameRoomName=gameRoomName))
@@ -138,7 +156,7 @@ class Lobby(object):
         if buy == 1:
             val = quantity * self.gameRooms[gameroomName][stock] / 100
             if self.gameRooms[gameroomName][playerIP]['cash'] < val:
-                print "Error. Insufficient funds."
+                print("Error. Insufficient funds.")
             else:
                 self.gameRooms[gameroomName][playerIP]['cash'] -= val
                 self.gameRooms[gameroomName][playerIP][stock] += quantity
@@ -147,7 +165,7 @@ class Lobby(object):
         # selling
         else:
             if self.gameRooms[gameroomName][playerIP][stock] < quantity:
-                print "Error. Insufficient quantity to sell."
+                print("Error. Insufficient quantity to sell.")
             else:
                 val = quantity * self.gameRooms[gameroomName][stock] / 100
                 self.gameRooms[gameroomName][playerIP]['cash'] += val
@@ -161,7 +179,7 @@ class Lobby(object):
     '''
     def payDividends(self, gameroomName, price, stock):
         if self.gameRooms[gameroomName][stock] < 100:
-            print 'Stock price too low to pay dividend'
+            print('Stock price too low to pay dividend')
             return
         for player in self.gameRooms[gameroomName]['players']:
             payment = self.gameRooms[gameroomName][player][stock] * price / 100
@@ -208,7 +226,7 @@ class Lobby(object):
                 clients = self.gameRooms[gameroomName]['players']
                 for i in clients:
                     i.sendall('price,%s,%s,worth,%s' % (stock, price, self.gameRooms[gameroomName][i]['total worth']))
-        else: print 'Could not parse stock name %s' % (stock)
+        else: print('Could not parse stock name %s' % (stock))
         return
 
     '''
@@ -274,7 +292,7 @@ class Lobby(object):
                 self.gameRooms[gameroomName][player]['silver'] = startingHoldings
 
 
-        else: print "Error - cannot parse message: %s" % message
+        else: print("Error - cannot parse message: %s" % message)
         return
 
     def setBondsPrice(self,price, gameroomName):
