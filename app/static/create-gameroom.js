@@ -27,6 +27,7 @@ function $onInit() {
     console.log(timepickers.wickedpicker('time'));
 }
 
+/*
 function $onSubmit() {
     var data = {    
         "brokerName": document.getElementById('playerName').value,
@@ -42,6 +43,7 @@ function $onSubmit() {
 
     //window.location.href = '../play/' + ctrl.gameRoomName;
 }
+*/
 
 })(jQuery, window, document);
 

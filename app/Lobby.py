@@ -3,6 +3,7 @@
 
 from flask import Flask, render_template, request, redirect, url_for, jsonify, json
 import socket
+import requests
 from GameRoom import GameRoom
 from Player import Player
 
@@ -16,8 +17,32 @@ def home():
 
 @app.route('/gameroom', methods=['POST'])
 def createroom():
+    app.logger.debug("JSON received...")
+    requestJson = request.get_json(force=True)
+    app.logger.debug(requestJson)
+    if request.mimetype == 'application/json':
+        mydata = request.json
+        playerName = mydata.get('playerName')
+        gameRoomName = mydata.get('gameRoomName')
+        startingCash = mydata.get('startingCash')
+        startingStockHoldings = mydata.get('startingStockHoldings')
+        return '''
+           The player's name is: {}
+           The game room's name is: {}
+           The starting cash value is: {}
+           The starting stock holdings value is: {}'''.format(playerName, gameRoomName, startingCash, startingStockHoldings)
+
+        return "playerName is %s in %s" % mydata.get("playerName"), mydata.get("gameRoomName")
+    elif request.mimetype == 'application/x-www-form-urlencoded':
+        dictObj = request.form.to_dict()
+        gameRoom = GameRoom(dictObj)
+        return gameRoom
+    else:
+        return "no json received"
+
     if request.method=='POST':
-        req_data = request.get_json()
+        req_data = request.get_json(force=True)
+        app.logger.debug(req_data)
         playerName = req_data['playerName']
         gameRoomName = req_data['gameRoomName']
         startingCash = req_data['startingCash']
@@ -37,7 +62,8 @@ def startCreateRoom():
                 "gameRoomName" : request.form['gameRoomName'],
                 "startingStockHoldings" : request.form['startingStockHoldings'],
                 "startingCash" : request.form['startingCash']}
-        return jsonify(jsonObj)
+        r = requests.post(url_for('createroom'), json=jsonObj)
+        r.json()
 
 
 @app.route('/joingameroom/')
